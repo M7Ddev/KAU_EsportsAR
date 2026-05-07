@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>KAU Esports - Tournament AR</title>
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
+    import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyCqbp0pJAyTi9SfSS6Ah8DYNucWhfRs5-o",
+      authDomain: "kauesports-83131.firebaseapp.com",
+      projectId: "kauesports-83131",
+      storageBucket: "kauesports-83131.firebasestorage.app",
+      messagingSenderId: "1021860460145",
+      appId: "1:1021860460145:web:1d24517d2ab254e443cdd0"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    function formatDate(dateStr) {
+      if (!dateStr) return "TBD";
+      const d = new Date(dateStr);
+      return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    }
+
+    function truncate(str, max) {
+      if (!str || str === "null") return "—";
+      return str.length > max ? str.substring(0, max - 1) + "…" : str;
+    }
+
+    function makePlane(w, h, color, pos, cls) {
+      const p = document.createElement("a-plane");
+      p.setAttribute("width", w);
+      p.setAttribute("height", h);
+      p.setAttribute("color", color);
+      p.setAttribute("position", pos);
+      // fully opaque — no transparency so no z-fighting flicker
+      p.setAttribute("opacity", "1");
+      if (cls) p.classList.add(cls);
+      return p;
+    }
+
+    function buildCards(tournaments) {
+      const marker = document.querySelector("a-marker");
+      if (!marker) return;
+
+      marker.querySelectorAll(".tournament-card, .ar-header, .ar-bg").forEach(el => el.remove());
+
+      const count = tournaments.length;
+      const spacing = 1.6;
+      const totalWidth = (count - 1) * spacing;
+      const bgW = count * spacing + 1.0;
+      const bgH = 3.4;
+      const bgY  = 1.5;
+      const bdr  = 0.06; // border thickness
+
+      // ── Solid background panel (no transparency layers) ──────────────────
+      // Green border frame via 4 edge strips around the dark fill
+      marker.appendChild(makePlane(bgW + bdr * 2, bgH + bdr * 2, "#00E676", `0 ${bgY} -0.04`, "ar-bg")); // full green rect
+      marker.appendChild(makePlane(bgW,           bgH,           "#030F03", `0 ${bgY} -0.03`, "ar-bg")); // dark fill on top
+
+      // ── Header banner (solid only) ───────────────────────────────────────
+      const bannerW = Math.max(bgW, 5.8);
+      const bannerY = bgY + bgH / 2 + 0.35;
+      marker.appendChild(makePlane(bannerW + bdr * 2, 0.62, "#00E676", `0 ${bannerY} -0.04`, "ar-header")); // green border
+      marker.appendChild(makePlane(bannerW,            0.50, "#000000", `0 ${bannerY} -0.03`, "ar-header")); // black fill
+
+      const header = document.createElement("a-text");
+      header.classList.add("ar-header");
+      header.setAttribute("value", "KAU ESPORTS TOURNAMENTS");
+      header.setAttribute("position", `0 ${bannerY} -0.02`);
+      header.setAttribute("align", "center");
+      header.setAttribute("color", "#00E676");
+      header.setAttribute("width", "7.5");
+      header.setAttribute("font", "exo2bold");
+      header.setAttribute("animation", "property: scale; from: 1 1 1; to: 1.03 1.03 1.03; dir: alternate; loop: true; dur: 2000; easing: easeInOutSine");
+      marker.appendChild(header);
+
+      // ── Cards ─────────────────────────────────────────────────────────────
+      const statusColors = {
+        upcoming:  "#00C853",
+        ongoing:   "#69F0AE",
+        active:    "#00E676",
+        completed: "#546E7A",
+        cancelled: "#EF5350"
+      };
+
+      tournaments.forEach((t, i) => {
+        const x = -totalWidth / 2 + i * spacing;
+        const g = document.createElement("a-entity");
+        g.classList.add("tournament-card");
+        g.setAttribute("position", `${x} 0.05 0`);
+
+        const status      = (t.status || "upcoming").toLowerCase();
+        const statusColor = statusColors[status] || "#00C853";
+
+        const cardW = 1.4, cardH = 2.0, cardY = 1.1;
+
+        // Green border then black card — both fully opaque, clear z-gap
+        g.appendChild(makePlane(cardW + 0.04, cardH + 0.04, "#00E676",  `0 ${cardY} -0.01`));  // border
+        g.appendChild(makePlane(cardW,        cardH,         "#030F03",  `0 ${cardY}  0`));      // fill
+
+        // Top accent bar
+        g.appendChild(makePlane(cardW, 0.09, "#00E676", `0 ${cardY + cardH / 2 - 0.045} 0.001`));
+
+        // Game name
+        const gameText = document.createElement("a-text");
+        gameText.setAttribute("value", truncate(t.game || "Game", 14));
+        gameText.setAttribute("position", `0 ${cardY + 0.78} 0.01`);
+        gameText.setAttribute("align", "center");
+        gameText.setAttribute("color", "#FFFFFF");
+        gameText.setAttribute("width", "2.8");
+        gameText.setAttribute("font", "exo2bold");
+        g.appendChild(gameText);
+
+        // Tournament name
+        const nameText = document.createElement("a-text");
+        nameText.setAttribute("value", truncate(t.name || "Tournament", 20));
+        nameText.setAttribute("position", `0 ${cardY + 0.58} 0.01`);
+        nameText.setAttribute("align", "center");
+        nameText.setAttribute("color", "#00E676");
+        nameText.setAttribute("width", "2.4");
+        nameText.setAttribute("font", "exo2semibold");
+        g.appendChild(nameText);
+
+        // Divider (solid, no opacity)
+        g.appendChild(makePlane(1.2, 0.012, "#00E676", `0 ${cardY + 0.45} 0.001`));
+
+        // Info lines
+        const infoLines = [
+          [`Format: ${truncate(t.format || "—", 20)}`, cardY + 0.32, "#A5D6A7"],
+          [`Start: ${formatDate(t.startDate)}`,         cardY + 0.16, "#E8F5E9"],
+          [`End:   ${formatDate(t.endDate)}`,           cardY + 0.00, "#E8F5E9"],
+          [`Players: ${t.registeredPlayers || 0} / ${t.maxPlayers || "?"}`, cardY - 0.16, "#E8F5E9"]
+        ];
+        infoLines.forEach(([val, y, color]) => {
+          const txt = document.createElement("a-text");
+          txt.setAttribute("value", val);
+          txt.setAttribute("position", `0 ${y} 0.01`);
+          txt.setAttribute("align", "center");
+          txt.setAttribute("color", color);
+          txt.setAttribute("width", "2.2");
+          txt.setAttribute("font", "roboto");
+          g.appendChild(txt);
+        });
+
+        // Progress bar track (solid dark green)
+        g.appendChild(makePlane(1.1, 0.07, "#0A260A", `0 ${cardY - 0.30} 0.001`));
+
+        // Progress bar fill (solid bright green)
+        const maxP = t.maxPlayers || 1;
+        const regP = t.registeredPlayers || 0;
+        const ratio = Math.min(regP / maxP, 1);
+        const fw = 1.1 * ratio;
+        if (fw > 0) {
+          const fx = -1.1 / 2 + fw / 2;
+          g.appendChild(makePlane(fw, 0.07, "#00E676", `${fx} ${cardY - 0.30} 0.002`));
+        }
+
+        // Status badge (solid)
+        g.appendChild(makePlane(0.7, 0.20, statusColor, `0 ${cardY - 0.50} 0.001`));
+        const stTxt = document.createElement("a-text");
+        stTxt.setAttribute("value", status.toUpperCase());
+        stTxt.setAttribute("position", `0 ${cardY - 0.50} 0.012`);
+        stTxt.setAttribute("align", "center");
+        stTxt.setAttribute("color", "#000000");
+        stTxt.setAttribute("width", "1.6");
+        stTxt.setAttribute("font", "exo2bold");
+        g.appendChild(stTxt);
+
+        g.setAttribute("animation", `property: position; from: ${x} 0.05 0; to: ${x} 0.18 0; dir: alternate; loop: true; dur: ${2000 + i * 300}; easing: easeInOutSine`);
+        marker.appendChild(g);
+      });
+    }
+
+    async function loadTournaments() {
+      try {
+        const snap = await getDocs(collection(db, "tournaments"));
+        const tournaments = [];
+        snap.forEach(doc => tournaments.push({ id: doc.id, ...doc.data() }));
+
+        const order = { ongoing: 0, active: 0, upcoming: 1, completed: 2, cancelled: 3 };
+        tournaments.sort((a, b) => {
+          const ao = order[(a.status || "upcoming").toLowerCase()] ?? 9;
+          const bo = order[(b.status || "upcoming").toLowerCase()] ?? 9;
+          return ao - bo;
+        });
+
+        buildCards(tournaments);
+      } catch (err) {
+        console.error("Firebase error:", err);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const scene = document.querySelector("a-scene");
+      scene.addEventListener("loaded", () => {
+        loadTournaments();
+
+        // ── Sticky marker: permanently lock visibility after first detection ──
+        // Object.defineProperty stops AR.js from ever setting visible=false again,
+        // eliminating the per-frame RAF vs AR.js fight that caused flicker.
+        const marker = document.querySelector("a-marker");
+        marker.addEventListener("markerFound", () => {
+          Object.defineProperty(marker.object3D, "visible", {
+            get: () => true,
+            set: () => {},       // swallow all hide attempts
+            configurable: true   // allow redefine if needed
+          });
+        }, { once: true });      // only run once — no need to repeat
+      });
+    });
+  </script>
+</head>
+
+<body style="margin: 0; overflow: hidden;">
+  <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
+    <a-marker preset="hiro" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="2">
+      <!-- Cards injected by JavaScript -->
+    </a-marker>
+    <a-entity camera></a-entity>
+  </a-scene>
+</body>
+
+</html>
