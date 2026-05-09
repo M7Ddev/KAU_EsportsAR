@@ -86,11 +86,23 @@
 
     #ar-hint.hidden { opacity: 0; }
 
-    /* Keep the canvas exactly full-screen on every device */
-    a-scene, canvas {
+    /* Canvas must be transparent so the camera video shows through */
+    canvas.a-canvas {
+      background: transparent !important;
+      position: fixed !important;
+      top: 0 !important; left: 0 !important;
       width: 100% !important;
       height: 100% !important;
-      display: block;
+    }
+
+    /* AR.js injects a <video> for the camera feed — keep it fullscreen behind canvas */
+    video {
+      position: fixed !important;
+      top: 0 !important; left: 0 !important;
+      width: 100% !important;
+      height: 100% !important;
+      object-fit: cover !important;
+      z-index: -1 !important;
     }
   </style>
 
@@ -283,6 +295,19 @@
       }
     }
 
+    // ── iOS video fix ─────────────────────────────────────────────────────────
+    // iOS Safari stalls the camera video unless we set playsinline and call play().
+    // AR.js injects the <video> element slightly after scene init, so we poll.
+    function ensureVideoPlays() {
+      const video = document.querySelector("video");
+      if (!video) return false;
+      video.setAttribute("playsinline",        "true");
+      video.setAttribute("webkit-playsinline", "true");
+      video.muted = true;
+      video.play().catch(() => {});
+      return true;
+    }
+
     // ── Boot ──────────────────────────────────────────────────────────────────
     document.addEventListener("DOMContentLoaded", () => {
       const scene   = document.querySelector("a-scene");
@@ -290,10 +315,21 @@
       const hint    = document.getElementById("ar-hint");
 
       scene.addEventListener("loaded", () => {
-        // Hide the loading screen once AR.js is ready
-        loading.classList.add("hidden");
-
         loadTournaments();
+
+        // Keep loading screen until the camera video is actually playing.
+        // Failsafe: hide after 6 s regardless so users are never stuck.
+        const MAX_WAIT = 6000;
+        const started  = Date.now();
+        const waitForCamera = setInterval(() => {
+          ensureVideoPlays();
+          const video = document.querySelector("video");
+          const ready = video && !video.paused && video.readyState >= 2;
+          if (ready || Date.now() - started > MAX_WAIT) {
+            loading.classList.add("hidden");
+            clearInterval(waitForCamera);
+          }
+        }, 250);
 
         // Sticky marker: once Hiro is seen, override the visible setter so
         // AR.js can never hide the content again (no RAF fight = no flicker).
@@ -319,7 +355,7 @@
   <div id="ar-loading">
     <div class="ar-spinner"></div>
     <h1>KAU ESPORTS AR</h1>
-    <p>Starting camera…</p>
+    <p>Starting camera… (allow access if prompted)</p>
   </div>
 
   <!-- Dismissed as soon as the Hiro marker is first detected -->
@@ -328,7 +364,7 @@
   <a-scene
     embedded
     arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
-    renderer="logarithmicDepthBuffer: true; antialias: true;"
+    renderer="logarithmicDepthBuffer: true; antialias: true; alpha: true;"
     vr-mode-ui="enabled: false"
   >
     <a-marker preset="hiro" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="2">
