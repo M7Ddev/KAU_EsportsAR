@@ -24,13 +24,13 @@
       display: flex; flex-direction: column;
       align-items: center; justify-content: center;
       z-index: 1000;
-      gap: 36px;
-      padding: 24px;
+      gap: 28px;
+      padding: 20px;
     }
 
     .menu-title {
       color: #fff;
-      font-size: clamp(1.3rem, 6vw, 2rem);
+      font-size: clamp(1.4rem, 7vw, 2rem);
       font-weight: 700;
       text-align: center;
       letter-spacing: 0.02em;
@@ -39,16 +39,16 @@
 
     .menu-subtitle {
       color: #6a8a6a;
-      font-size: clamp(0.85rem, 3.5vw, 1rem);
+      font-size: clamp(0.9rem, 4vw, 1rem);
       text-align: center;
-      margin-top: -20px;
+      margin-top: -12px;
     }
 
     .menu-cards {
       display: flex;
-      gap: 16px;
+      gap: 14px;
       width: 100%;
-      max-width: 420px;
+      max-width: 380px;
     }
 
     .menu-card {
@@ -56,10 +56,10 @@
       background: #0d1a0d;
       border: 2px solid #00E676;
       border-radius: 20px;
-      padding: 32px 12px;
+      padding: 28px 10px;
       display: flex; flex-direction: column;
       align-items: center;
-      gap: 14px;
+      gap: 12px;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
       user-select: none;
@@ -67,45 +67,451 @@
     }
     .menu-card:active { background: #183018; transform: scale(0.96); }
 
-    .menu-card .icon { font-size: 2.6rem; }
+    .menu-card .icon { font-size: clamp(2rem, 10vw, 2.8rem); }
     .menu-card .label {
       color: #00E676;
-      font-size: clamp(0.9rem, 4vw, 1.05rem);
+      font-size: clamp(0.95rem, 4.5vw, 1.1rem);
       font-weight: 700;
       text-align: center;
     }
 
-    /* ── No leaderboard screen ────────────────────────────────────────── */
-    #no-lb-screen {
+    /* ── Cards overlay (shown over AR camera) ─────────────────────────── */
+    #cards-overlay {
       position: fixed; inset: 0;
-      background: #080f08;
-      display: none; flex-direction: column;
-      align-items: center; justify-content: center;
-      z-index: 1000;
-      gap: 28px;
-      padding: 24px;
-      text-align: center;
+      background: rgba(0, 0, 0, 0.78);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      z-index: 800;
+      overflow: hidden;
     }
 
-    #no-lb-screen .big-icon { font-size: 4rem; }
+    .overlay-header {
+      width: 100%;
+      max-width: 520px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 16px 8px;
+      flex-shrink: 0;
+    }
 
-    #no-lb-screen .msg {
-      color: #fff;
+    .overlay-title {
+      color: #00E676;
       font-size: clamp(1rem, 5vw, 1.3rem);
-      line-height: 1.6;
+      font-weight: 700;
+      letter-spacing: 0.02em;
     }
-    #no-lb-screen .msg span { color: #00E676; font-weight: 700; }
 
-    #back-btn {
+    .overlay-back {
       background: transparent;
-      border: 2px solid #00E676;
+      border: 1.5px solid #00E676;
       color: #00E676;
       border-radius: 999px;
-      padding: 12px 32px;
-      font-size: 1rem;
+      padding: 9px 22px;
+      font-size: clamp(0.85rem, 4vw, 0.95rem);
       font-weight: 600;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
+    }
+
+    .overlay-search-wrap {
+      width: 100%;
+      max-width: 520px;
+      padding: 0 14px 10px;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .overlay-search-wrap .search-icon {
+      position: absolute;
+      left: 28px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1rem;
+      pointer-events: none;
+      opacity: 0.55;
+    }
+
+    #overlay-search {
+      width: 100%;
+      background: rgba(13, 27, 13, 0.9);
+      border: 1.5px solid #1e3a1e;
+      border-radius: 999px;
+      padding: 11px 18px 11px 42px;
+      color: #E8F5E9;
+      font-size: clamp(0.88rem, 4vw, 1rem);
+      font-family: inherit;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      transition: border-color 0.2s;
+    }
+    #overlay-search::placeholder { color: #4a6a4a; }
+    #overlay-search:focus { border-color: #00E676; }
+
+    .overlay-no-results {
+      text-align: center;
+      color: #6a8a6a;
+      font-size: clamp(0.88rem, 4vw, 1rem);
+      padding: 36px 0;
+      display: none;
+    }
+
+    #cards-container {
+      width: 100%;
+      max-width: 520px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 6px 14px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      flex: 1;
+    }
+
+    /* ── Tournament card HTML ─────────────────────────────────────────── */
+    .t-card-html {
+      background: #0D1B0D;
+      border: 2px solid #00E676;
+      border-radius: 18px;
+      padding: 16px 18px 14px;
+      position: relative;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    .t-card-html::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 6px;
+      background: #00E676;
+      border-radius: 18px 0 0 18px;
+    }
+
+    .tc-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-left: 12px;
+      margin-bottom: 6px;
+    }
+
+    .tc-game {
+      color: #fff;
+      font-size: clamp(1.05rem, 5vw, 1.25rem);
+      font-weight: 700;
+      line-height: 1.2;
+      flex: 1;
+    }
+
+    .tc-status {
+      background: #00C853;
+      color: #000;
+      font-size: clamp(0.7rem, 3vw, 0.82rem);
+      font-weight: 700;
+      padding: 4px 11px;
+      border-radius: 999px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-left: 10px;
+      align-self: flex-start;
+      margin-top: 3px;
+    }
+
+    .tc-name {
+      color: #00E676;
+      font-size: clamp(0.92rem, 4.2vw, 1.05rem);
+      font-weight: 600;
+      margin-left: 12px;
+      margin-bottom: 10px;
+    }
+
+    .tc-divider {
+      height: 1px;
+      background: #1e3a1e;
+      margin: 0 0 10px 12px;
+    }
+
+    .tc-rows {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 8px 18px;
+      margin-left: 12px;
+      font-size: clamp(0.88rem, 4vw, 1rem);
+    }
+
+    .tc-lbl {
+      color: #69F0AE;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .tc-val {
+      color: #E8F5E9;
+    }
+
+    .tc-progress-wrap {
+      margin: 12px 0 0 12px;
+      background: #0a260a;
+      border-radius: 999px;
+      height: 8px;
+      overflow: hidden;
+    }
+
+    .tc-progress-bar {
+      height: 100%;
+      border-radius: 999px;
+      background: #00C853;
+      transition: width 0.4s ease;
+    }
+
+    /* ── Leaderboard screen ───────────────────────────────────────────── */
+    #lb-screen {
+      position: fixed; inset: 0;
+      background: #080f08;
+      display: none; flex-direction: column;
+      align-items: center;
+      z-index: 1000;
+      overflow: hidden;
+    }
+
+    .lb-header {
+      width: 100%;
+      max-width: 520px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 16px 10px;
+      flex-shrink: 0;
+    }
+
+    .lb-title {
+      color: #00E676;
+      font-size: clamp(1.1rem, 6vw, 1.4rem);
+      font-weight: 700;
+    }
+
+    .lb-back {
+      background: transparent;
+      border: 1.5px solid #00E676;
+      color: #00E676;
+      border-radius: 999px;
+      padding: 9px 22px;
+      font-size: clamp(0.85rem, 4vw, 0.95rem);
+      font-weight: 600;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .lb-game-tag {
+      width: 100%;
+      max-width: 520px;
+      padding: 0 16px 12px;
+      color: #6a8a6a;
+      font-size: clamp(0.82rem, 3.8vw, 0.95rem);
+      flex-shrink: 0;
+    }
+    .lb-game-tag span { color: #00E676; font-weight: 600; }
+
+    #lb-table {
+      width: 100%;
+      max-width: 520px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 0 14px 28px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .lb-col-hdr {
+      display: grid;
+      grid-template-columns: 44px 1fr 46px 46px 58px;
+      padding: 4px 14px;
+      color: #6a8a6a;
+      font-size: clamp(0.72rem, 3.2vw, 0.82rem);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .lb-row {
+      display: grid;
+      grid-template-columns: 44px 1fr 46px 46px 58px;
+      align-items: center;
+      background: #0d1a0d;
+      border: 1.5px solid #1e3a1e;
+      border-radius: 14px;
+      padding: 13px 14px;
+      gap: 4px;
+    }
+
+    .lb-row.top1 { border-color: #FFD700; background: #1a160a; }
+    .lb-row.top2 { border-color: #C0C0C0; background: #12151a; }
+    .lb-row.top3 { border-color: #CD7F32; background: #180f0a; }
+
+    .lb-rank {
+      font-size: clamp(1rem, 4.5vw, 1.15rem);
+      font-weight: 700;
+      color: #69F0AE;
+      text-align: center;
+    }
+    .lb-row.top1 .lb-rank { color: #FFD700; }
+    .lb-row.top2 .lb-rank { color: #C0C0C0; }
+    .lb-row.top3 .lb-rank { color: #CD7F32; }
+
+    .lb-name {
+      font-size: clamp(0.88rem, 4vw, 1rem);
+      color: #E8F5E9;
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .lb-wins, .lb-losses, .lb-pts {
+      font-size: clamp(0.85rem, 3.8vw, 0.98rem);
+      text-align: center;
+    }
+    .lb-wins   { color: #00E676; font-weight: 600; }
+    .lb-losses { color: #EF5350; }
+    .lb-pts    { color: #69F0AE; font-weight: 700; }
+
+    /* ── Tournament picker screen ─────────────────────────────────────── */
+    #lb-pick-screen {
+      position: fixed; inset: 0;
+      background: #080f08;
+      display: none; flex-direction: column;
+      align-items: center;
+      z-index: 1000;
+      overflow: hidden;
+    }
+
+    .lb-pick-header {
+      width: 100%;
+      max-width: 520px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 16px 8px;
+      flex-shrink: 0;
+    }
+
+    .lb-pick-title {
+      color: #00E676;
+      font-size: clamp(1.1rem, 6vw, 1.4rem);
+      font-weight: 700;
+    }
+
+    .lb-pick-back {
+      background: transparent;
+      border: 1.5px solid #00E676;
+      color: #00E676;
+      border-radius: 999px;
+      padding: 9px 22px;
+      font-size: clamp(0.85rem, 4vw, 0.95rem);
+      font-weight: 600;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .lb-pick-subtitle {
+      width: 100%;
+      max-width: 520px;
+      padding: 0 16px 14px;
+      color: #6a8a6a;
+      font-size: clamp(0.8rem, 3.6vw, 0.9rem);
+      flex-shrink: 0;
+    }
+
+    #lb-pick-list {
+      width: 100%;
+      max-width: 520px;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 4px 14px 28px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .lb-pick-card {
+      background: #0d1a0d;
+      border: 1.5px solid #1e3a1e;
+      border-radius: 18px;
+      padding: 18px 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      -webkit-tap-highlight-color: transparent;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .lb-pick-card:active { background: #183018; border-color: #00E676; }
+
+    .lb-pick-icon { font-size: clamp(1.6rem, 7vw, 2rem); flex-shrink: 0; }
+
+    .lb-pick-info { flex: 1; }
+    .lb-pick-name {
+      color: #E8F5E9;
+      font-size: clamp(0.95rem, 4.5vw, 1.1rem);
+      font-weight: 700;
+    }
+    .lb-pick-sub {
+      color: #6a8a6a;
+      font-size: clamp(0.78rem, 3.4vw, 0.88rem);
+      margin-top: 5px;
+    }
+    .lb-pick-sub span { color: #00E676; font-weight: 600; }
+
+    .lb-pick-arrow { color: #00E676; font-size: 1.3rem; flex-shrink: 0; }
+
+    /* ── Search bar ───────────────────────────────────────────────────── */
+    .lb-search-wrap {
+      width: 100%;
+      max-width: 520px;
+      padding: 0 14px 12px;
+      flex-shrink: 0;
+      position: relative;
+    }
+
+    .lb-search-wrap .search-icon {
+      position: absolute;
+      left: 28px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 1rem;
+      pointer-events: none;
+      opacity: 0.55;
+    }
+
+    #lb-search {
+      width: 100%;
+      background: #0d1a0d;
+      border: 1.5px solid #1e3a1e;
+      border-radius: 999px;
+      padding: 12px 18px 12px 42px;
+      color: #E8F5E9;
+      font-size: clamp(0.88rem, 4vw, 1rem);
+      font-family: inherit;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      transition: border-color 0.2s;
+    }
+    #lb-search::placeholder { color: #4a6a4a; }
+    #lb-search:focus { border-color: #00E676; }
+
+    .lb-no-results {
+      text-align: center;
+      color: #6a8a6a;
+      font-size: clamp(0.88rem, 4vw, 1rem);
+      padding: 36px 0;
+      display: none;
     }
 
     /* ── AR hint ──────────────────────────────────────────────────────── */
@@ -115,7 +521,7 @@
       transform: translateX(-50%);
       background: rgba(0, 0, 0, 0.80);
       color: #00E676;
-      font-size: clamp(0.75rem, 3.8vw, 0.95rem);
+      font-size: clamp(0.78rem, 4vw, 0.95rem);
       font-weight: 600;
       padding: 11px 24px;
       border-radius: 999px;
@@ -160,24 +566,6 @@
       return s.length > max ? s.slice(0, max - 1) + '…' : s;
     }
 
-    // ── Canvas card drawing ───────────────────────────────────────────────────
-    // 512×256: power-of-two dimensions for best GPU texture compatibility
-    const CW = 512, CH = 256;
-
-    function rrect(ctx, x, y, w, h, r) {
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.lineTo(x + w - r, y);
-      ctx.arcTo(x + w, y,     x + w, y + r,     r);
-      ctx.lineTo(x + w, y + h - r);
-      ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
-      ctx.lineTo(x + r, y + h);
-      ctx.arcTo(x,      y + h, x,        y + h - r, r);
-      ctx.lineTo(x, y + r);
-      ctx.arcTo(x,      y,     x + r,    y,         r);
-      ctx.closePath();
-    }
-
     const STATUS_COLORS = {
       upcoming:  '#00C853',
       ongoing:   '#69F0AE',
@@ -186,143 +574,63 @@
       cancelled: '#EF5350'
     };
 
-    function drawCard(canvas, t) {
-      const ctx = canvas.getContext('2d');
-      ctx.clearRect(0, 0, CW, CH);
-
+    // ── Build HTML tournament cards (overlaid on camera — always visible) ─────
+    function createHTMLCard(t) {
       const status = (t.status || 'upcoming').toLowerCase();
       const sc = STATUS_COLORS[status] || '#00C853';
-
-      // Dark background with rounded corners
-      rrect(ctx, 0, 0, CW, CH, 24);
-      ctx.fillStyle = '#0D1B0D';
-      ctx.fill();
-
-      // Green border
-      rrect(ctx, 2, 2, CW - 4, CH - 4, 22);
-      ctx.strokeStyle = '#00E676';
-      ctx.lineWidth = 3;
-      ctx.stroke();
-
-      // Left accent bar (clipped to card shape)
-      ctx.save();
-      rrect(ctx, 0, 0, CW, CH, 24);
-      ctx.clip();
-      ctx.fillStyle = '#00E676';
-      ctx.fillRect(0, 0, 8, CH);
-      ctx.restore();
-
-      // Status pill (top-right)
-      const pw = 120, ph = 30, px = CW - pw - 14, py = 14;
-      rrect(ctx, px, py, pw, ph, 15);
-      ctx.fillStyle = sc;
-      ctx.fill();
-      ctx.fillStyle = '#000';
-      ctx.font = 'bold 14px "Segoe UI",sans-serif';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(status.toUpperCase(), px + pw / 2, py + ph / 2);
-
-      const lx = 20;
-
-      // Game name
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 22px "Segoe UI",sans-serif';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'top';
-      ctx.fillText(trunc(t.game || 'Game', 22), lx, 16);
-
-      // Tournament name
-      ctx.fillStyle = '#00E676';
-      ctx.font = 'bold 17px "Segoe UI",sans-serif';
-      ctx.fillText(trunc(t.name || 'Tournament', 34), lx, 48);
-
-      // Divider
-      ctx.fillStyle = '#1e3a1e';
-      ctx.fillRect(lx, 78, CW - lx - 14, 1);
-
-      // Info rows
-      const rows = [
-        ['Format',  trunc(t.format || '—', 22)],
-        ['Start',   formatDate(t.startDate)],
-        ['End',     formatDate(t.endDate)],
-        ['Players', `${t.registeredPlayers || 0} / ${t.maxPlayers || '?'}`]
-      ];
-      ctx.font = '14px "Segoe UI",sans-serif';
-      rows.forEach(([lbl, val], i) => {
-        const ry = 88 + i * 28;
-        ctx.fillStyle = '#69F0AE';
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'top';
-        ctx.fillText(lbl + ':', lx, ry);
-        ctx.fillStyle = '#E8F5E9';
-        ctx.fillText(val, lx + 84, ry);
-      });
-
-      // Progress bar
       const ratio = Math.min((t.registeredPlayers || 0) / (t.maxPlayers || 1), 1);
-      const bx = lx, by = CH - 22, bw = CW - lx - 14, bh = 10;
-      rrect(ctx, bx, by, bw, bh, 5);
-      ctx.fillStyle = '#0a260a';
-      ctx.fill();
-      if (ratio > 0) {
-        rrect(ctx, bx, by, Math.max(bw * ratio, bh), bh, 5);
-        ctx.fillStyle = sc;
-        ctx.fill();
-      }
+
+      const card = document.createElement('div');
+      card.className = 't-card-html';
+      card.innerHTML = `
+        <div class="tc-top">
+          <div class="tc-game">${trunc(t.game || 'Game', 24)}</div>
+          <div class="tc-status" style="background:${sc};color:${status==='completed'||status==='cancelled'?'#fff':'#000'}">${status.toUpperCase()}</div>
+        </div>
+        <div class="tc-name">${trunc(t.name || 'Tournament', 42)}</div>
+        <div class="tc-divider"></div>
+        <div class="tc-rows">
+          <span class="tc-lbl">Format:</span><span class="tc-val">${trunc(t.format || '—', 32)}</span>
+          <span class="tc-lbl">Start:</span><span class="tc-val">${formatDate(t.startDate)}</span>
+          <span class="tc-lbl">End:</span><span class="tc-val">${formatDate(t.endDate)}</span>
+          <span class="tc-lbl">Players:</span><span class="tc-val">${t.registeredPlayers || 0} / ${t.maxPlayers || '?'}</span>
+        </div>
+        <div class="tc-progress-wrap">
+          <div class="tc-progress-bar" style="width:${ratio * 100}%;background:${sc}"></div>
+        </div>
+      `;
+      return card;
     }
 
-    // ── Build AR cards (horizontal, stacked vertically) ───────────────────────
     function buildCards(tournaments) {
-      const marker = document.querySelector('a-marker');
-      if (!marker) return;
+      const overlay   = document.getElementById('cards-overlay');
+      const container = document.getElementById('cards-container');
+      // Clear only the cards, keep search input and no-results
+      container.querySelectorAll('.t-card-html').forEach(el => el.remove());
 
-      marker.querySelectorAll('.t-card, .t-header').forEach(el => el.remove());
+      if (tournaments.length === 0) {
+        const empty = document.createElement('p');
+        empty.style.cssText = 'color:#69F0AE;text-align:center;padding:40px 0;font-size:1rem';
+        empty.textContent = 'No tournaments found.';
+        container.appendChild(empty);
+      } else {
+        tournaments.forEach(t => {
+          const card = createHTMLCard(t);
+          // store searchable text as a data attribute for fast filtering
+          card.dataset.search = `${t.game || ''} ${t.name || ''} ${t.status || ''} ${t.format || ''}`.toLowerCase();
+          container.appendChild(card);
+        });
+      }
 
-      const count = tournaments.length;
-      if (count === 0) return;
+      // Reset search state whenever new cards are loaded
+      const searchInput = document.getElementById('overlay-search');
+      if (searchInput) {
+        searchInput.value = '';
+        document.getElementById('overlay-no-results').style.display = 'none';
+      }
 
-      // Horizontal card: 2.0 wide × 1.0 tall (matches 512×256 canvas ratio)
-      const cW = 2.0, cH = 1.0, gap = 1.15;
-      // Stack cards vertically, centered around y = 1.5
-      const startY = 1.5 + ((count - 1) * gap) / 2;
-
-      // Header label above the stack
-      const hdr = document.createElement('a-text');
-      hdr.classList.add('t-header');
-      hdr.setAttribute('value', 'KAU ESPORTS — TOURNAMENTS');
-      hdr.setAttribute('position', `0 ${startY + cH / 2 + 0.38} 0`);
-      hdr.setAttribute('align', 'center');
-      hdr.setAttribute('color', '#00E676');
-      hdr.setAttribute('width', '5');
-      hdr.setAttribute('font', 'exo2bold');
-      marker.appendChild(hdr);
-
-      tournaments.forEach((t, i) => {
-        const canvas = document.createElement('canvas');
-        canvas.width = CW;
-        canvas.height = CH;
-        drawCard(canvas, t);
-
-        const plane = document.createElement('a-plane');
-        plane.classList.add('t-card');
-        plane.setAttribute('width',    cW);
-        plane.setAttribute('height',   cH);
-        plane.setAttribute('position', `0 ${startY - i * gap} 0`);
-        plane.setAttribute('color',    '#000000');
-
-        // Apply canvas texture via Three.js once the entity initialises
-        plane.addEventListener('loaded', () => {
-          const mesh = plane.getObject3D('mesh');
-          if (!mesh || !mesh.material) return;
-          const tex = new AFRAME.THREE.CanvasTexture(canvas);
-          mesh.material.map = tex;
-          mesh.material.color.setHex(0xffffff);
-          mesh.material.needsUpdate = true;
-        }, { once: true });
-
-        marker.appendChild(plane);
-      });
+      // Show overlay over the camera — cards stay visible regardless of marker
+      overlay.style.display = 'flex';
     }
 
     // ── Firebase fetch ────────────────────────────────────────────────────────
@@ -340,41 +648,227 @@
         buildCards(rows);
       } catch (e) {
         console.error('Firebase error:', e);
+        buildCards([]);
       }
+    }
+
+    // ── Dummy leaderboard data (per tournament) ──────────────────────────────
+    const tournamentLeaderboards = {
+      'valorant-open': {
+        name: 'Valorant Open',
+        game: 'Valorant',
+        season: 'Season 1',
+        players: [
+          { rank:1,  name:'AlphaStrike',   wins:15, losses:2,  points:1450 },
+          { rank:2,  name:'NightFang',     wins:13, losses:3,  points:1380 },
+          { rank:3,  name:'DesertPhoenix', wins:12, losses:4,  points:1290 },
+          { rank:4,  name:'ShadowByte',    wins:11, losses:4,  points:1210 },
+          { rank:5,  name:'VortexKing',    wins:10, losses:5,  points:1150 },
+          { rank:6,  name:'IronCrest',     wins:9,  losses:5,  points:1080 },
+          { rank:7,  name:'StarBlaze99',   wins:8,  losses:6,  points: 995 },
+          { rank:8,  name:'RedComet',      wins:7,  losses:7,  points: 920 },
+          { rank:9,  name:'QuickSlash',    wins:6,  losses:7,  points: 840 },
+          { rank:10, name:'TurboFalcon',   wins:5,  losses:8,  points: 760 },
+        ]
+      },
+      'fc-championship': {
+        name: 'FC Championship',
+        game: 'EA FC 25',
+        season: 'Season 1',
+        players: [
+          { rank:1,  name:'GoalMachine',  wins:14, losses:1,  points:1500 },
+          { rank:2,  name:'PenaltyKing',  wins:12, losses:2,  points:1400 },
+          { rank:3,  name:'NetBuster',    wins:11, losses:3,  points:1300 },
+          { rank:4,  name:'FreeKickGod',  wins:10, losses:4,  points:1200 },
+          { rank:5,  name:'OffsideTrap',  wins:9,  losses:5,  points:1100 },
+          { rank:6,  name:'WingWizard',   wins:8,  losses:5,  points:1010 },
+          { rank:7,  name:'TikiTaka',     wins:7,  losses:6,  points: 930 },
+          { rank:8,  name:'HighPress',    wins:6,  losses:7,  points: 850 },
+          { rank:9,  name:'CounterKing',  wins:5,  losses:8,  points: 760 },
+          { rank:10, name:'LongBallLord', wins:4,  losses:9,  points: 670 },
+        ]
+      },
+      'pubg-invitational': {
+        name: 'PUBG Invitational',
+        game: 'PUBG Mobile',
+        season: 'Season 1',
+        players: [
+          { rank:1,  name:'DropZoneKing',  wins:18, losses:2,  points:1600 },
+          { rank:2,  name:'CircleMaster',  wins:16, losses:4,  points:1480 },
+          { rank:3,  name:'BoostGod',      wins:14, losses:5,  points:1350 },
+          { rank:4,  name:'FragLord',      wins:13, losses:5,  points:1250 },
+          { rank:5,  name:'PanSword',      wins:11, losses:7,  points:1140 },
+          { rank:6,  name:'BluezoneHero',  wins:10, losses:7,  points:1050 },
+          { rank:7,  name:'SniperElite',   wins:9,  losses:8,  points: 960 },
+          { rank:8,  name:'ChickenDinner', wins:8,  losses:9,  points: 870 },
+          { rank:9,  name:'GhillieGhost',  wins:6,  losses:10, points: 760 },
+          { rank:10, name:'LastManOut',    wins:5,  losses:11, points: 650 },
+        ]
+      },
+      'r6-siege-cup': {
+        name: 'R6 Siege Cup',
+        game: 'Rainbow Six Siege',
+        season: 'Season 2',
+        players: [
+          { rank:1,  name:'OperatorX',   wins:16, losses:2,  points:1550 },
+          { rank:2,  name:'DroneKing',   wins:14, losses:3,  points:1430 },
+          { rank:3,  name:'WallBanger',  wins:12, losses:4,  points:1310 },
+          { rank:4,  name:'RoamClearer', wins:11, losses:5,  points:1200 },
+          { rank:5,  name:'GadgetGuru',  wins:10, losses:6,  points:1100 },
+          { rank:6,  name:'FlankMaster', wins:9,  losses:6,  points:1010 },
+          { rank:7,  name:'SiteHolder',  wins:8,  losses:7,  points: 920 },
+          { rank:8,  name:'AttackerAce', wins:7,  losses:8,  points: 830 },
+          { rank:9,  name:'DefenderPro', wins:5,  losses:9,  points: 720 },
+          { rank:10, name:'SpawnPeeker', wins:4,  losses:10, points: 620 },
+        ]
+      },
+    };
+
+    function buildLeaderboard(tournamentId) {
+      const data = tournamentLeaderboards[tournamentId];
+      const table = document.getElementById('lb-table');
+      const subtitle = document.getElementById('lb-subtitle');
+      subtitle.innerHTML = `${data.season} &mdash; <span>${data.game}</span> &mdash; ${data.name}`;
+
+      const hdr = table.querySelector('.lb-col-hdr');
+      table.innerHTML = '';
+      if (hdr) table.appendChild(hdr);
+
+      data.players.forEach(p => {
+        const medal = p.rank === 1 ? '🥇' : p.rank === 2 ? '🥈' : p.rank === 3 ? '🥉' : `#${p.rank}`;
+        const row = document.createElement('div');
+        row.className = `lb-row${p.rank <= 3 ? ' top' + p.rank : ''}`;
+        row.innerHTML = `
+          <div class="lb-rank">${medal}</div>
+          <div class="lb-name">${p.name}</div>
+          <div class="lb-wins">${p.wins}</div>
+          <div class="lb-losses">${p.losses}</div>
+          <div class="lb-pts">${p.points}</div>
+        `;
+        table.appendChild(row);
+      });
     }
 
     // ── Navigation ────────────────────────────────────────────────────────────
     document.addEventListener('DOMContentLoaded', () => {
-      const menu  = document.getElementById('menu-screen');
-      const noLb  = document.getElementById('no-lb-screen');
-      const hint  = document.getElementById('ar-hint');
-      const scene = document.querySelector('a-scene');
+      const menu       = document.getElementById('menu-screen');
+      const overlay    = document.getElementById('cards-overlay');
+      const lbPick     = document.getElementById('lb-pick-screen');
+      const lbScreen   = document.getElementById('lb-screen');
+      const hint       = document.getElementById('ar-hint');
+      const scene      = document.querySelector('a-scene');
+
+      let tournamentsLoaded = false;
+      let leaderboardMode   = false;
 
       document.getElementById('btn-tournaments').addEventListener('click', () => {
         menu.style.display = 'none';
+        leaderboardMode = false;
+        hint.classList.remove('hidden');
         hint.classList.add('visible');
-        if (scene.hasLoaded) {
-          loadTournaments();
-        } else {
-          scene.addEventListener('loaded', loadTournaments, { once: true });
-        }
+        // Do NOT show cards yet — wait for marker detection
       });
 
       document.getElementById('btn-leaderboard').addEventListener('click', () => {
         menu.style.display = 'none';
-        noLb.style.display = 'flex';
+        leaderboardMode = true;
+        hint.classList.remove('hidden');
+        hint.classList.add('visible');
+        // Do NOT show picker yet — wait for marker detection
       });
 
-      document.getElementById('back-btn').addEventListener('click', () => {
-        noLb.style.display = 'none';
+      document.getElementById('overlay-back').addEventListener('click', () => {
+        overlay.style.display = 'none';
+        tournamentsLoaded = false;
+        leaderboardMode = false;
+        hint.classList.remove('visible');
+        hint.classList.add('hidden');
         menu.style.display = 'flex';
       });
 
-      // Hide hint when marker is detected (no sticky lock — stays interactive)
+      // Pick-screen back → camera hint (so user can re-scan marker)
+      document.getElementById('lb-pick-back').addEventListener('click', () => {
+        lbPick.style.display = 'none';
+        leaderboardMode = true;
+        hint.classList.remove('hidden');
+        hint.classList.add('visible');
+      });
+
+      // Search bar live filter — leaderboard picker
+      const searchInput  = document.getElementById('lb-search');
+      const noResults    = document.getElementById('lb-no-results');
+      searchInput.addEventListener('input', () => {
+        const q = searchInput.value.trim().toLowerCase();
+        let visible = 0;
+        document.querySelectorAll('.lb-pick-card').forEach(card => {
+          const text = card.textContent.toLowerCase();
+          const show = !q || text.includes(q);
+          card.style.display = show ? 'flex' : 'none';
+          if (show) visible++;
+        });
+        noResults.style.display = visible === 0 ? 'block' : 'none';
+      });
+
+      // Clear search when picker is re-opened
+      function resetSearch() {
+        searchInput.value = '';
+        document.querySelectorAll('.lb-pick-card').forEach(c => c.style.display = 'flex');
+        noResults.style.display = 'none';
+      }
+
+      // Search bar live filter — tournaments overlay
+      const overlaySearch   = document.getElementById('overlay-search');
+      const overlayNoResult = document.getElementById('overlay-no-results');
+      overlaySearch.addEventListener('input', () => {
+        const q = overlaySearch.value.trim().toLowerCase();
+        let visible = 0;
+        document.querySelectorAll('#cards-container .t-card-html').forEach(card => {
+          const text = (card.dataset.search || card.textContent).toLowerCase();
+          const show = !q || text.includes(q);
+          card.style.display = show ? 'block' : 'none';
+          if (show) visible++;
+        });
+        overlayNoResult.style.display = visible === 0 ? 'block' : 'none';
+      });
+
+      // Tournament pick cards → show leaderboard for that tournament
+      document.querySelectorAll('.lb-pick-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const id = card.dataset.id;
+          buildLeaderboard(id);
+          lbPick.style.display = 'none';
+          lbScreen.style.display = 'flex';
+        });
+      });
+
+      // Leaderboard back → picker
+      document.getElementById('lb-back').addEventListener('click', () => {
+        lbScreen.style.display = 'none';
+        resetSearch();
+        lbPick.style.display = 'flex';
+      });
+
+      // Show content only after Hiro marker is detected
       const marker = document.querySelector('a-marker');
       marker.addEventListener('markerFound', () => {
         hint.classList.remove('visible');
         hint.classList.add('hidden');
+
+        if (menu.style.display !== 'none') return; // user is on menu, ignore
+
+        if (leaderboardMode && lbPick.style.display !== 'flex' && lbScreen.style.display !== 'flex') {
+          // Show tournament picker for leaderboard
+          resetSearch();
+          lbPick.style.display = 'flex';
+        } else if (!leaderboardMode && overlay.style.display !== 'flex' && !tournamentsLoaded) {
+          // Show tournament cards
+          tournamentsLoaded = true;
+          if (scene.hasLoaded) {
+            loadTournaments();
+          } else {
+            scene.addEventListener('loaded', loadTournaments, { once: true });
+          }
+        }
       });
     });
   </script>
@@ -398,24 +892,97 @@
     </div>
   </div>
 
-  <!-- ── No leaderboard screen ──────────────────────────────────────── -->
-  <div id="no-lb-screen">
-    <div class="big-icon">📊</div>
-    <div class="msg">No <span>leaderboards</span> available yet.<br>Check back soon!</div>
-    <button id="back-btn">← Back</button>
+  <!-- ── Cards overlay (overlaid on AR camera — always visible once loaded) -->
+  <div id="cards-overlay">
+    <div class="overlay-header">
+      <div class="overlay-title">🏆 KAU Esports Tournaments</div>
+      <button class="overlay-back" id="overlay-back">← Back</button>
+    </div>
+    <div class="overlay-search-wrap">
+      <span class="search-icon">🔍</span>
+      <input id="overlay-search" type="search" placeholder="Search by game, name or status…" autocomplete="off" />
+    </div>
+    <div id="cards-container">
+      <div class="overlay-no-results" id="overlay-no-results">No tournaments match your search.</div>
+    </div>
+  </div>
+
+  <!-- ── Tournament picker screen ─────────────────────────────────────── -->
+  <div id="lb-pick-screen">
+    <div class="lb-pick-header">
+      <div class="lb-pick-title">📊 Leaderboard</div>
+      <button class="lb-pick-back" id="lb-pick-back">← Back</button>
+    </div>
+    <div class="lb-pick-subtitle">Choose a tournament to view its rankings</div>
+    <div class="lb-search-wrap">
+      <span class="search-icon">🔍</span>
+      <input id="lb-search" type="search" placeholder="Search by name or game…" autocomplete="off" />
+    </div>
+    <div id="lb-pick-list">
+      <div class="lb-pick-card" data-id="valorant-open">
+        <div class="lb-pick-icon">🔫</div>
+        <div class="lb-pick-info">
+          <div class="lb-pick-name">Valorant Open</div>
+          <div class="lb-pick-sub"><span>Valorant</span> &bull; Season 1 &bull; 10 players</div>
+        </div>
+        <div class="lb-pick-arrow">›</div>
+      </div>
+      <div class="lb-pick-card" data-id="fc-championship">
+        <div class="lb-pick-icon">⚽</div>
+        <div class="lb-pick-info">
+          <div class="lb-pick-name">FC Championship</div>
+          <div class="lb-pick-sub"><span>EA FC 25</span> &bull; Season 1 &bull; 10 players</div>
+        </div>
+        <div class="lb-pick-arrow">›</div>
+      </div>
+      <div class="lb-pick-card" data-id="pubg-invitational">
+        <div class="lb-pick-icon">🎯</div>
+        <div class="lb-pick-info">
+          <div class="lb-pick-name">PUBG Invitational</div>
+          <div class="lb-pick-sub"><span>PUBG Mobile</span> &bull; Season 1 &bull; 10 players</div>
+        </div>
+        <div class="lb-pick-arrow">›</div>
+      </div>
+      <div class="lb-pick-card" data-id="r6-siege-cup">
+        <div class="lb-pick-icon">🛡️</div>
+        <div class="lb-pick-info">
+          <div class="lb-pick-name">R6 Siege Cup</div>
+          <div class="lb-pick-sub"><span>Rainbow Six Siege</span> &bull; Season 2 &bull; 10 players</div>
+        </div>
+        <div class="lb-pick-arrow">›</div>
+      </div>
+      <div class="lb-no-results" id="lb-no-results">No tournaments match your search.</div>
+    </div>
+  </div>
+
+  <!-- ── Leaderboard screen ──────────────────────────────────────────── -->
+  <div id="lb-screen">
+    <div class="lb-header">
+      <div class="lb-title">📊 Leaderboard</div>
+      <button class="lb-back" id="lb-back">← Back</button>
+    </div>
+    <div class="lb-game-tag" id="lb-subtitle"></div>
+    <div id="lb-table">
+      <div class="lb-col-hdr">
+        <span></span>
+        <span>Player</span>
+        <span style="text-align:center">W</span>
+        <span style="text-align:center">L</span>
+        <span style="text-align:center">PTS</span>
+      </div>
+    </div>
   </div>
 
   <!-- ── AR hint (shown when AR is active) ──────────────────────────── -->
   <div id="ar-hint">Point camera at the Hiro marker</div>
 
-  <!-- ── AR scene (camera permission requested on page load) ────────── -->
+  <!-- ── AR scene (camera background) ──────────────────────────────── -->
   <a-scene
     embedded
     arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
     vr-mode-ui="enabled: false"
   >
     <a-marker preset="hiro" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="2">
-      <!-- Tournament cards injected by JavaScript -->
     </a-marker>
     <a-entity camera></a-entity>
   </a-scene>
