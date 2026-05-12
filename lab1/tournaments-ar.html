@@ -115,6 +115,34 @@
       -webkit-tap-highlight-color: transparent;
     }
 
+    .overlay-toggle {
+      background: transparent;
+      border: 1.5px solid #69F0AE;
+      color: #69F0AE;
+      border-radius: 999px;
+      padding: 9px 14px;
+      font-size: clamp(0.85rem, 4vw, 0.95rem);
+      font-weight: 700;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+
+    /* Minimized overlay — only the header bar visible, fully transparent bg */
+    #cards-overlay.minimized {
+      background: transparent;
+    }
+    #cards-overlay.minimized .overlay-search-wrap,
+    #cards-overlay.minimized #cards-container {
+      display: none !important;
+    }
+    #cards-overlay.minimized .overlay-header {
+      padding-bottom: 14px;
+      background: rgba(0, 0, 0, 0.45);
+      border-radius: 0 0 16px 16px;
+    }
+
     .overlay-search-wrap {
       width: 100%;
       max-width: 520px;
@@ -534,10 +562,76 @@
     }
     #ar-hint.visible { opacity: 1; }
     #ar-hint.hidden  { opacity: 0; }
+
+    /* ── AR tap prompt ────────────────────────────────────────────────── */
+    #ar-tap-prompt {
+      position: fixed;
+      bottom: 80px; left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.75);
+      color: #69F0AE;
+      font-size: clamp(0.75rem, 3.8vw, 0.9rem);
+      font-weight: 600;
+      padding: 9px 20px;
+      border-radius: 999px;
+      border: 1.5px solid #69F0AE;
+      white-space: nowrap;
+      z-index: 9998;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+    #ar-tap-prompt.visible { opacity: 1; }
   </style>
 
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+
+  <script>
+    // ── AR object state management ────────────────────────────────────────────
+    // Registers a custom component that pulses an object on click/tap
+    AFRAME.registerComponent('pulse-on-click', {
+      init: function () {
+        this.el.addEventListener('click', () => {
+          const el = this.el;
+          el.setAttribute('animation__pulse', {
+            property: 'scale',
+            to: '1.35 1.35 1.35',
+            dur: 150,
+            dir: 'alternate',
+            loop: 2,
+            easing: 'easeInOutSine'
+          });
+        });
+      }
+    });
+
+    // ── Registers a component that rotates continuously ───────────────────────
+    AFRAME.registerComponent('spin', {
+      schema: { speed: { default: 60 }, axis: { default: 'y' } },
+      tick: function (t, dt) {
+        const rot = this.el.getAttribute('rotation') || { x: 0, y: 0, z: 0 };
+        const deg = (this.data.speed * dt) / 1000;
+        if (this.data.axis === 'y') rot.y += deg;
+        else if (this.data.axis === 'x') rot.x += deg;
+        else rot.z += deg;
+        this.el.setAttribute('rotation', rot);
+      }
+    });
+
+    // ── Cursor hover highlight ────────────────────────────────────────────────
+    AFRAME.registerComponent('cursor-listener', {
+      init: function () {
+        const el = this.el;
+        el.addEventListener('mouseenter', () => {
+          el.setAttribute('scale', '1.12 1.12 1.12');
+        });
+        el.addEventListener('mouseleave', () => {
+          el.setAttribute('scale', '1 1 1');
+        });
+      }
+    });
+  </script>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js";
@@ -778,6 +872,7 @@
       });
 
       document.getElementById('overlay-back').addEventListener('click', () => {
+        overlay.classList.remove('minimized');
         overlay.style.display = 'none';
         tournamentsLoaded = false;
         leaderboardMode = false;
@@ -786,12 +881,18 @@
         menu.style.display = 'flex';
       });
 
-      // Pick-screen back → camera hint (so user can re-scan marker)
+      document.getElementById('overlay-toggle').addEventListener('click', () => {
+        const isMin = overlay.classList.toggle('minimized');
+        document.getElementById('overlay-toggle').textContent = isMin ? '⊞ List' : '⊟ AR';
+      });
+
+      // Pick-screen back → main menu
       document.getElementById('lb-pick-back').addEventListener('click', () => {
         lbPick.style.display = 'none';
-        leaderboardMode = true;
-        hint.classList.remove('hidden');
-        hint.classList.add('visible');
+        leaderboardMode = false;
+        hint.classList.remove('visible');
+        hint.classList.add('hidden');
+        menu.style.display = 'flex';
       });
 
       // Search bar live filter — leaderboard picker
@@ -850,9 +951,45 @@
 
       // Show content only after Hiro marker is detected
       const marker = document.querySelector('a-marker');
+      const tapPrompt = document.getElementById('ar-tap-prompt');
+
+      // Wire AR object tap buttons to navigation
+      document.querySelector('a-scene').addEventListener('loaded', () => {
+        const arTournBtn = document.getElementById('ar-btn-tournaments');
+        const arLbBtn    = document.getElementById('ar-btn-leaderboard');
+
+        if (arTournBtn) {
+          arTournBtn.addEventListener('click', () => {
+            if (menu.style.display === 'none') return;
+            menu.style.display = 'none';
+            leaderboardMode = false;
+            tapPrompt.classList.remove('visible');
+            tournamentsLoaded = true;
+            if (scene.hasLoaded) loadTournaments();
+            else scene.addEventListener('loaded', loadTournaments, { once: true });
+          });
+        }
+
+        if (arLbBtn) {
+          arLbBtn.addEventListener('click', () => {
+            if (menu.style.display === 'none') return;
+            menu.style.display = 'none';
+            leaderboardMode = true;
+            tapPrompt.classList.remove('visible');
+            resetSearch();
+            lbPick.style.display = 'flex';
+          });
+        }
+      });
+
       marker.addEventListener('markerFound', () => {
         hint.classList.remove('visible');
         hint.classList.add('hidden');
+
+        // Show tap prompt only when still on the menu
+        if (menu.style.display !== 'none') {
+          tapPrompt.classList.add('visible');
+        }
 
         if (menu.style.display !== 'none') return; // user is on menu, ignore
 
@@ -869,6 +1006,10 @@
             scene.addEventListener('loaded', loadTournaments, { once: true });
           }
         }
+      });
+
+      marker.addEventListener('markerLost', () => {
+        tapPrompt.classList.remove('visible');
       });
     });
   </script>
@@ -896,7 +1037,10 @@
   <div id="cards-overlay">
     <div class="overlay-header">
       <div class="overlay-title">🏆 KAU Esports Tournaments</div>
-      <button class="overlay-back" id="overlay-back">← Back</button>
+      <div style="display:flex;align-items:center;gap:0">
+        <button class="overlay-toggle" id="overlay-toggle" title="Toggle AR view">⊟ AR</button>
+        <button class="overlay-back" id="overlay-back">← Back</button>
+      </div>
     </div>
     <div class="overlay-search-wrap">
       <span class="search-icon">🔍</span>
@@ -973,6 +1117,9 @@
     </div>
   </div>
 
+  <!-- ── AR tap prompt ──────────────────────────────────────────────── -->
+  <div id="ar-tap-prompt">Tap an object to explore</div>
+
   <!-- ── AR hint (shown when AR is active) ──────────────────────────── -->
   <div id="ar-hint">Point camera at the Hiro marker</div>
 
@@ -983,8 +1130,117 @@
     vr-mode-ui="enabled: false"
   >
     <a-marker preset="hiro" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="2">
+
+      <!-- ── Central trophy pedestal ────────────────────────────────── -->
+      <!-- Base platform -->
+      <a-cylinder position="0 0.04 0" radius="0.55" height="0.08"
+        material="color:#003300; metalness:0.6; roughness:0.3; emissive:#001a00"></a-cylinder>
+
+      <!-- Glowing ring on platform -->
+      <a-torus position="0 0.08 0" radius="0.45" radius-tubular="0.015"
+        material="color:#00E676; emissive:#00E676; emissiveIntensity:0.8"
+        animation="property:rotation; to:0 360 0; loop:true; dur:4000; easing:linear"></a-torus>
+
+      <!-- Trophy cup body -->
+      <a-entity position="0 0.45 0" spin="speed:40;axis:y" id="ar-trophy-spin">
+        <!-- Cup base stem -->
+        <a-cylinder position="0 -0.18 0" radius="0.06" height="0.22"
+          material="color:#FFD700; metalness:0.9; roughness:0.1; emissive:#806000"></a-cylinder>
+        <!-- Cup bowl -->
+        <a-cone position="0 0.1 0" radius-bottom="0.22" radius-top="0.28" height="0.3"
+          material="color:#FFD700; metalness:0.9; roughness:0.1; emissive:#806000"></a-cone>
+        <!-- Star on top -->
+        <a-sphere position="0 0.3 0" radius="0.07"
+          material="color:#fff176; emissive:#FFD700; emissiveIntensity:1.0"
+          animation="property:scale; to:1.4 1.4 1.4; dir:alternate; loop:true; dur:800; easing:easeInOutSine"></a-sphere>
+      </a-entity>
+
+      <!-- Floating label: KAU Esports -->
+      <a-text value="KAU Esports" align="center" position="0 1.05 0"
+        color="#00E676" width="2.2"
+        animation="property:position; to:0 1.15 0; dir:alternate; loop:true; dur:2000; easing:easeInOutSine">
+      </a-text>
+
+      <!-- ── Tournaments button object (left) ───────────────────────── -->
+      <a-entity id="ar-btn-tournaments" position="-0.85 0.25 0"
+        class="clickable" pulse-on-click cursor-listener>
+        <!-- Panel backing -->
+        <a-plane width="0.6" height="0.42" position="0 0 -0.01"
+          material="color:#0d1a0d; opacity:0.92; transparent:true"
+          rotation="0 0 0"></a-plane>
+        <!-- Green border frame (4 thin boxes) -->
+        <a-box position="0 0.21 0"  width="0.62" height="0.02" depth="0.01"
+          material="color:#00E676; emissive:#00E676; emissiveIntensity:0.6"></a-box>
+        <a-box position="0 -0.21 0" width="0.62" height="0.02" depth="0.01"
+          material="color:#00E676; emissive:#00E676; emissiveIntensity:0.6"></a-box>
+        <a-box position="-0.31 0 0" width="0.02" height="0.42" depth="0.01"
+          material="color:#00E676; emissive:#00E676; emissiveIntensity:0.6"></a-box>
+        <a-box position="0.31 0 0"  width="0.02" height="0.42" depth="0.01"
+          material="color:#00E676; emissive:#00E676; emissiveIntensity:0.6"></a-box>
+        <!-- Trophy icon text -->
+        <a-text value="🏆" align="center" position="0 0.09 0.01" width="1.8"></a-text>
+        <!-- Label -->
+        <a-text value="Tournaments" align="center" position="0 -0.1 0.01"
+          color="#00E676" width="1.3"></a-text>
+        <!-- Hover pulse animation -->
+        <a-animation attribute="scale" to="1.08 1.08 1.08" direction="alternate"
+          dur="1600" repeat="indefinite" easing="easeInOutSine"></a-animation>
+      </a-entity>
+
+      <!-- ── Leaderboard button object (right) ──────────────────────── -->
+      <a-entity id="ar-btn-leaderboard" position="0.85 0.25 0"
+        class="clickable" pulse-on-click cursor-listener>
+        <!-- Panel backing -->
+        <a-plane width="0.6" height="0.42" position="0 0 -0.01"
+          material="color:#0d1a0d; opacity:0.92; transparent:true"></a-plane>
+        <!-- Green border frame -->
+        <a-box position="0 0.21 0"  width="0.62" height="0.02" depth="0.01"
+          material="color:#00E676; emissive:#00E676; emissiveIntensity:0.6"></a-box>
+        <a-box position="0 -0.21 0" width="0.62" height="0.02" depth="0.01"
+          material="color:#00E676; emissive:#00E676; emissiveIntensity:0.6"></a-box>
+        <a-box position="-0.31 0 0" width="0.02" height="0.42" depth="0.01"
+          material="color:#00E676; emissive:#00E676; emissiveIntensity:0.6"></a-box>
+        <a-box position="0.31 0 0"  width="0.02" height="0.42" depth="0.01"
+          material="color:#00E676; emissive:#00E676; emissiveIntensity:0.6"></a-box>
+        <!-- Chart icon text -->
+        <a-text value="📊" align="center" position="0 0.09 0.01" width="1.8"></a-text>
+        <!-- Label -->
+        <a-text value="Leaderboard" align="center" position="0 -0.1 0.01"
+          color="#00E676" width="1.3"></a-text>
+        <!-- Hover pulse animation -->
+        <a-animation attribute="scale" to="1.08 1.08 1.08" direction="alternate"
+          dur="1900" repeat="indefinite" easing="easeInOutSine"></a-animation>
+      </a-entity>
+
+      <!-- ── Orbiting particles around trophy ───────────────────────── -->
+      <a-entity position="0 0.5 0" spin="speed:90;axis:y">
+        <a-sphere position="0.6 0 0" radius="0.05"
+          material="color:#00E676; emissive:#00E676; emissiveIntensity:1"></a-sphere>
+      </a-entity>
+      <a-entity position="0 0.5 0" spin="speed:-70;axis:y">
+        <a-sphere position="0 0 0.65" radius="0.04"
+          material="color:#69F0AE; emissive:#69F0AE; emissiveIntensity:0.9"></a-sphere>
+      </a-entity>
+      <a-entity position="0 0.5 0" spin="speed:55;axis:y">
+        <a-sphere position="-0.55 0.15 0" radius="0.035"
+          material="color:#FFD700; emissive:#FFD700; emissiveIntensity:0.8"></a-sphere>
+      </a-entity>
+
+      <!-- ── Ambient point light ─────────────────────────────────────── -->
+      <a-light type="point" position="0 1.2 0" color="#00E676" intensity="0.6"></a-light>
+      <a-light type="ambient" color="#ffffff" intensity="0.5"></a-light>
+
     </a-marker>
-    <a-entity camera></a-entity>
+
+    <!-- Raycaster camera for tap/click on AR objects -->
+    <a-entity camera>
+      <a-entity cursor="fuse:false; rayOrigin:mouse"
+        raycaster="objects:.clickable; far:100"
+        position="0 0 -1"
+        geometry="primitive:ring; radiusInner:0.01; radiusOuter:0.02"
+        material="color:#00E676; shader:flat; opacity:0.8">
+      </a-entity>
+    </a-entity>
   </a-scene>
 
 </body>
