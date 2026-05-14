@@ -1132,82 +1132,136 @@
     <a-marker preset="hiro" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="2">
 
       <!-- ── Central trophy pedestal ────────────────────────────────── -->
-      <!-- Base platform -->
       <a-cylinder position="0 0.04 0" radius="0.55" height="0.08"
         material="color:#003300; metalness:0.6; roughness:0.3; emissive:#001a00"></a-cylinder>
 
-      <!-- Glowing ring on platform -->
       <a-torus position="0 0.08 0" radius="0.45" radius-tubular="0.015"
         material="color:#00E676; emissive:#00E676; emissiveIntensity:0.8"
         animation="property:rotation; to:0 360 0; loop:true; dur:4000; easing:linear"></a-torus>
 
-      <!-- Trophy cup body -->
       <a-entity position="0 0.45 0" spin="speed:40;axis:y" id="ar-trophy-spin">
-        <!-- Cup base stem -->
         <a-cylinder position="0 -0.18 0" radius="0.06" height="0.22"
           material="color:#FFD700; metalness:0.9; roughness:0.1; emissive:#806000"></a-cylinder>
-        <!-- Cup bowl -->
         <a-cone position="0 0.1 0" radius-bottom="0.22" radius-top="0.28" height="0.3"
           material="color:#FFD700; metalness:0.9; roughness:0.1; emissive:#806000"></a-cone>
-        <!-- Star on top -->
         <a-sphere position="0 0.3 0" radius="0.07"
           material="color:#fff176; emissive:#FFD700; emissiveIntensity:1.0"
           animation="property:scale; to:1.4 1.4 1.4; dir:alternate; loop:true; dur:800; easing:easeInOutSine"></a-sphere>
       </a-entity>
 
       <!-- Floating label: KAU Esports -->
-      <a-text value="KAU Esports" align="center" position="0 1.05 0"
+      <a-text value="KAU Esports" align="center" position="0 1.08 0"
         color="#00E676" width="2.2"
-        animation="property:position; to:0 1.15 0; dir:alternate; loop:true; dur:2000; easing:easeInOutSine">
+        animation="property:position; to:0 1.18 0; dir:alternate; loop:true; dur:2000; easing:easeInOutSine">
       </a-text>
 
-      <!-- ── Tournaments button object (left) ───────────────────────── -->
+      <!-- ── Hall of Fame billboard (above trophy) ───────────────────── -->
+      <a-entity position="0 1.7 0"
+        animation="property:position; to:0 1.78 0; dir:alternate; loop:true; dur:3000; easing:easeInOutSine">
+        <!-- Gold-bordered backdrop -->
+        <a-plane width="1.55" height="0.82" position="0 0 -0.01"
+          material="color:#060d06; opacity:0.93; transparent:true"></a-plane>
+        <!-- Gold border -->
+        <a-box position="0 0.41 0"   width="1.57" height="0.022" depth="0.01"
+          material="color:#FFD700; emissive:#FFD700; emissiveIntensity:0.6"></a-box>
+        <a-box position="0 -0.41 0"  width="1.57" height="0.022" depth="0.01"
+          material="color:#FFD700; emissive:#FFD700; emissiveIntensity:0.6"></a-box>
+        <a-box position="-0.775 0 0" width="0.022" height="0.82" depth="0.01"
+          material="color:#FFD700; emissive:#FFD700; emissiveIntensity:0.6"></a-box>
+        <a-box position="0.775 0 0"  width="0.022" height="0.82" depth="0.01"
+          material="color:#FFD700; emissive:#FFD700; emissiveIntensity:0.6"></a-box>
+        <!-- Title -->
+        <a-text value="Hall of Fame" align="center" position="0 0.27 0.01"
+          color="#FFD700" width="2.6"></a-text>
+        <!-- Title divider -->
+        <a-box position="0 0.155 0.01" width="1.2" height="0.007" depth="0.005"
+          material="color:#FFD700; emissive:#FFD700; emissiveIntensity:0.4"></a-box>
+        <!-- Row 1: Valorant -->
+        <a-text value="Valorant:" align="left"  position="-0.65 0.05 0.01" color="#69F0AE" width="1.5"></a-text>
+        <a-text value="AlphaStrike" align="left" position="-0.02 0.05 0.01" color="#E8F5E9" width="1.3"></a-text>
+        <a-text value="1,450 pts"  align="right" position="0.65 0.05 0.01" color="#69F0AE" width="1.1"></a-text>
+        <!-- Row 2: EA FC 25 -->
+        <a-text value="EA FC 25:" align="left"  position="-0.65 -0.1 0.01" color="#69F0AE" width="1.5"></a-text>
+        <a-text value="GoalMachine" align="left" position="-0.02 -0.1 0.01" color="#E8F5E9" width="1.3"></a-text>
+        <a-text value="1,500 pts"  align="right" position="0.65 -0.1 0.01" color="#69F0AE" width="1.1"></a-text>
+        <!-- Row 3: PUBG (overall leader — gold) -->
+        <a-text value="PUBG:" align="left"       position="-0.65 -0.25 0.01" color="#FFD700" width="1.5"></a-text>
+        <a-text value="DropZoneKing" align="left" position="-0.02 -0.25 0.01" color="#FFD700" width="1.3"></a-text>
+        <a-text value="1,600 pts"  align="right" position="0.65 -0.25 0.01" color="#FFD700" width="1.1"></a-text>
+        <!-- Row 4: R6 Siege -->
+        <a-text value="R6 Siege:" align="left"  position="-0.65 -0.4 0.01" color="#69F0AE" width="1.5"></a-text>
+        <a-text value="OperatorX"  align="left"  position="-0.02 -0.4 0.01" color="#E8F5E9" width="1.3"></a-text>
+        <a-text value="1,550 pts"  align="right" position="0.65 -0.4 0.01" color="#69F0AE" width="1.1"></a-text>
+      </a-entity>
+
+      <!-- ── Tournaments button panel (left) — with data rows ────────── -->
       <a-entity id="ar-btn-tournaments" position="-0.85 0.25 0"
         class="clickable" pulse-on-click cursor-listener>
         <!-- Panel backing -->
-        <a-plane width="0.6" height="0.42" position="0 0 -0.01"
-          material="color:#0d1a0d; opacity:0.92; transparent:true"
-          rotation="0 0 0"></a-plane>
-        <!-- Green border frame (4 thin boxes) -->
-        <a-box position="0 0.21 0"  width="0.62" height="0.02" depth="0.01"
+        <a-plane width="0.65" height="0.76" position="0 0 -0.01"
+          material="color:#0d1a0d; opacity:0.93; transparent:true"></a-plane>
+        <!-- Green border -->
+        <a-box position="0 0.38 0"   width="0.67" height="0.022" depth="0.01"
           material="color:#00E676; emissive:#00E676; emissiveIntensity:0.6"></a-box>
-        <a-box position="0 -0.21 0" width="0.62" height="0.02" depth="0.01"
+        <a-box position="0 -0.38 0"  width="0.67" height="0.022" depth="0.01"
           material="color:#00E676; emissive:#00E676; emissiveIntensity:0.6"></a-box>
-        <a-box position="-0.31 0 0" width="0.02" height="0.42" depth="0.01"
+        <a-box position="-0.325 0 0" width="0.022" height="0.76" depth="0.01"
           material="color:#00E676; emissive:#00E676; emissiveIntensity:0.6"></a-box>
-        <a-box position="0.31 0 0"  width="0.02" height="0.42" depth="0.01"
+        <a-box position="0.325 0 0"  width="0.022" height="0.76" depth="0.01"
           material="color:#00E676; emissive:#00E676; emissiveIntensity:0.6"></a-box>
-        <!-- Trophy icon text -->
-        <a-text value="🏆" align="center" position="0 0.09 0.01" width="1.8"></a-text>
-        <!-- Label -->
-        <a-text value="Tournaments" align="center" position="0 -0.1 0.01"
-          color="#00E676" width="1.3"></a-text>
-        <!-- Hover pulse animation -->
+        <!-- Icon + title -->
+        <a-text value="🏆" align="center" position="0 0.24 0.01" width="1.7"></a-text>
+        <a-text value="Tournaments" align="center" position="0 0.09 0.01"
+          color="#00E676" width="1.25"></a-text>
+        <!-- Divider -->
+        <a-box position="0 0.0 0.01" width="0.5" height="0.007" depth="0.005"
+          material="color:#1e3a1e"></a-box>
+        <!-- Data row: Active -->
+        <a-text value="Active:"   align="left"  position="-0.26 -0.12 0.01" color="#69F0AE" width="0.85"></a-text>
+        <a-text value="2 Ongoing" align="right" position="0.27 -0.12 0.01"  color="#E8F5E9" width="0.85"></a-text>
+        <!-- Data row: Total -->
+        <a-text value="Total:"    align="left"  position="-0.26 -0.25 0.01" color="#69F0AE" width="0.85"></a-text>
+        <a-text value="4 Games"   align="right" position="0.27 -0.25 0.01"  color="#E8F5E9" width="0.85"></a-text>
+        <!-- Data row: Season -->
+        <a-text value="Season:"   align="left"  position="-0.26 -0.38 0.01" color="#69F0AE" width="0.85"></a-text>
+        <a-text value="2025-26"   align="right" position="0.27 -0.38 0.01"  color="#E8F5E9" width="0.85"></a-text>
+        <!-- Pulse -->
         <a-animation attribute="scale" to="1.08 1.08 1.08" direction="alternate"
           dur="1600" repeat="indefinite" easing="easeInOutSine"></a-animation>
       </a-entity>
 
-      <!-- ── Leaderboard button object (right) ──────────────────────── -->
+      <!-- ── Leaderboard button panel (right) — with winner data ────── -->
       <a-entity id="ar-btn-leaderboard" position="0.85 0.25 0"
         class="clickable" pulse-on-click cursor-listener>
         <!-- Panel backing -->
-        <a-plane width="0.6" height="0.42" position="0 0 -0.01"
-          material="color:#0d1a0d; opacity:0.92; transparent:true"></a-plane>
-        <!-- Green border frame -->
-        <a-box position="0 0.21 0"  width="0.62" height="0.02" depth="0.01"
+        <a-plane width="0.65" height="0.76" position="0 0 -0.01"
+          material="color:#0d1a0d; opacity:0.93; transparent:true"></a-plane>
+        <!-- Green border -->
+        <a-box position="0 0.38 0"   width="0.67" height="0.022" depth="0.01"
           material="color:#00E676; emissive:#00E676; emissiveIntensity:0.6"></a-box>
-        <a-box position="0 -0.21 0" width="0.62" height="0.02" depth="0.01"
+        <a-box position="0 -0.38 0"  width="0.67" height="0.022" depth="0.01"
           material="color:#00E676; emissive:#00E676; emissiveIntensity:0.6"></a-box>
-        <a-box position="-0.31 0 0" width="0.02" height="0.42" depth="0.01"
+        <a-box position="-0.325 0 0" width="0.022" height="0.76" depth="0.01"
           material="color:#00E676; emissive:#00E676; emissiveIntensity:0.6"></a-box>
-        <a-box position="0.31 0 0"  width="0.02" height="0.42" depth="0.01"
+        <a-box position="0.325 0 0"  width="0.022" height="0.76" depth="0.01"
           material="color:#00E676; emissive:#00E676; emissiveIntensity:0.6"></a-box>
-        <!-- Chart icon text -->
-        <a-text value="📊" align="center" position="0 0.09 0.01" width="1.8"></a-text>
-        <!-- Label -->
-        <a-text value="Leaderboard" align="center" position="0 -0.1 0.01"
-          color="#00E676" width="1.3"></a-text>
-        <!-- Hover pulse animation -->
+        <!-- Icon + title -->
+        <a-text value="📊" align="center" position="0 0.24 0.01" width="1.7"></a-text>
+        <a-text value="Leaderboard" align="center" position="0 0.09 0.01"
+          color="#00E676" width="1.25"></a-text>
+        <!-- Divider -->
+        <a-box position="0 0.0 0.01" width="0.5" height="0.007" depth="0.005"
+          material="color:#1e3a1e"></a-box>
+        <!-- Data row: Winner -->
+        <a-text value="Winner:"      align="left"  position="-0.26 -0.12 0.01" color="#69F0AE" width="0.85"></a-text>
+        <a-text value="DropZoneKing" align="right" position="0.27 -0.12 0.01"  color="#FFD700" width="0.85"></a-text>
+        <!-- Data row: Points -->
+        <a-text value="Points:"  align="left"  position="-0.26 -0.25 0.01" color="#69F0AE" width="0.85"></a-text>
+        <a-text value="1,600 pts" align="right" position="0.27 -0.25 0.01" color="#E8F5E9" width="0.85"></a-text>
+        <!-- Data row: Game -->
+        <a-text value="Game:"     align="left"  position="-0.26 -0.38 0.01" color="#69F0AE" width="0.85"></a-text>
+        <a-text value="PUBG"      align="right" position="0.27 -0.38 0.01"  color="#E8F5E9" width="0.85"></a-text>
+        <!-- Pulse -->
         <a-animation attribute="scale" to="1.08 1.08 1.08" direction="alternate"
           dur="1900" repeat="indefinite" easing="easeInOutSine"></a-animation>
       </a-entity>
@@ -1226,7 +1280,7 @@
           material="color:#FFD700; emissive:#FFD700; emissiveIntensity:0.8"></a-sphere>
       </a-entity>
 
-      <!-- ── Ambient point light ─────────────────────────────────────── -->
+      <!-- ── Lights ──────────────────────────────────────────────────── -->
       <a-light type="point" position="0 1.2 0" color="#00E676" intensity="0.6"></a-light>
       <a-light type="ambient" color="#ffffff" intensity="0.5"></a-light>
 
