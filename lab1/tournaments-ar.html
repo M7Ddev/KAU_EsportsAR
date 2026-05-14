@@ -588,8 +588,28 @@
   <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 
   <script>
-    // ── AR object state management ────────────────────────────────────────────
-    // Registers a custom component that pulses an object on click/tap
+    // ── AR objects hidden until user enables AR view ──────────────────────────
+    window.arObjectsVisible = false;
+
+    AFRAME.registerComponent('persistent-marker', {
+      init: function () {
+        this.seen = false;
+        // Start hidden
+        this.el.object3D.visible = false;
+        this.el.addEventListener('markerFound', () => { this.seen = true; });
+      },
+      tick: function () {
+        if (!window.arObjectsVisible) {
+          // Keep hidden when AR mode is off
+          if (this.el.object3D.visible) this.el.object3D.visible = false;
+        } else if (this.seen) {
+          // Keep visible once seen, when AR mode is on
+          if (!this.el.object3D.visible) this.el.object3D.visible = true;
+        }
+      }
+    });
+
+    // ── Registers a component that pulses an object on click/tap
     AFRAME.registerComponent('pulse-on-click', {
       init: function () {
         this.el.addEventListener('click', () => {
@@ -883,6 +903,7 @@
 
       document.getElementById('overlay-toggle').addEventListener('click', () => {
         const isMin = overlay.classList.toggle('minimized');
+        window.arObjectsVisible = isMin;
         document.getElementById('overlay-toggle').textContent = isMin ? '⊞ List' : '⊟ AR';
       });
 
@@ -1129,7 +1150,8 @@
     arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
     vr-mode-ui="enabled: false"
   >
-    <a-marker preset="hiro" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="2">
+    <a-marker preset="hiro" smooth="true" smoothCount="10" smoothTolerance="0.01" smoothThreshold="2"
+      persistent-marker>
 
       <!-- ── Central trophy pedestal ────────────────────────────────── -->
       <a-cylinder position="0 0.04 0" radius="0.55" height="0.08"
